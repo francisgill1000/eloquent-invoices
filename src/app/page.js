@@ -3,17 +3,59 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
-
+import { useEffect, useState } from 'react';
+import { Key } from 'lucide-react';
+import { set } from 'date-fns';
 // Assuming you have Lucide icons available or using the inline SVGs as provided.
 // For a production app, you'd typically import specific icons like:
 // import { Search, Sliders, AlertTriangle, Home, FileText, Users, Settings, Plus } from 'lucide-react';
 // We'll keep the SVGs inline for this conversion to be fully self-contained.
 
 export default function DashboardHome() {
-  // React style object for the clip-path effect
-  const clipPathStyle = {
-    clipPath: 'ellipse(150% 80% at 50% 20%)',
-  };
+
+  const [pendingInvoices, setPendingInvoices] = useState([]);
+  const [paidInvoices, setPaidInvoices] = useState([]);
+  const [dueInvoices, setDueInvoices] = useState([]);
+  const [dueInvoicesSum, setDueInvoicesSum] = useState([]);
+
+
+
+  useEffect(() => {
+    const fetchInvoices = async () => {
+
+      let res = await axios.get("invoices");
+
+      let invoices = res.data.data;
+
+
+      let paidInvoices = invoices.filter(inv => inv.status === 'Paid');
+
+      let pendingInvoices = invoices.filter(inv => inv.status === 'Pending' && inv.remaining_days_count > 0);
+
+      let dueInvoices = invoices.filter(inv => inv.status === 'Overdue');
+
+      console.log(dueInvoices.map(e => e.total));
+      
+
+      const dueInvoicesSum = dueInvoices.reduce((acc, cur) => acc + parseFloat(cur.total.replace(/,/g, '')), 0);
+
+      // Format as UAE Dirham
+      let formatted = new Intl.NumberFormat('en-AE', {
+        style: 'currency',
+        currency: 'AED'
+      }).format(dueInvoicesSum);
+
+
+      setDueInvoicesSum(formatted);
+
+      setPendingInvoices(pendingInvoices);
+      setPaidInvoices(paidInvoices);
+      setDueInvoices(dueInvoices);
+      console.log("🚀 ~ fetchInvoices ~ dueInvoices:", dueInvoices)
+
+    };
+    fetchInvoices();
+  }, []);
 
   // Placeholder functions for actions
   const toggleFilter = () => {
@@ -53,7 +95,7 @@ export default function DashboardHome() {
       <section className="px-4 pt-4">
         <div className="rounded-xl bg-red-500/10 p-4 text-red-500 dark:bg-red-500/20">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold">Overdue</h2>
+            <h2 className="text-xl font-bold">Total Overdue</h2>
             <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-red-500/20 text-red-500">
               {/* Alert Triangle Icon SVG */}
               <svg className="lucide lucide-alert-triangle" fill="none" height="28" stroke="currentColor"
@@ -65,21 +107,16 @@ export default function DashboardHome() {
               </svg>
             </div>
           </div>
-          <p className="mt-1 text-3xl font-bold">AED 4,820.00</p>
+          <p className="mt-1 text-3xl font-bold">{dueInvoicesSum}</p>
           <div className="mt-4 space-y-3">
             {/* Overdue details... */}
-            <div className="flex items-center justify-between">
-              <p className="font-semibold text-slate-700 dark:text-slate-300">Innovate LLC</p>
-              <p className="font-semibold text-slate-800 dark:text-white">AED 2,500.00</p>
-            </div>
-            <div className="flex items-center justify-between">
-              <p className="font-semibold text-slate-700 dark:text-slate-300">Quantum Solutions</p>
-              <p className="font-semibold text-slate-800 dark:text-white">AED 1,500.00</p>
-            </div>
-            <div className="flex items-center justify-between">
-              <p className="font-semibold text-slate-700 dark:text-slate-300">Apex Enterprises</p>
-              <p className="font-semibold text-slate-800 dark:text-white">AED 820.00</p>
-            </div>
+            {dueInvoices.map((invoice, i) => (
+              <div className="flex items-center justify-between">
+                <p className="font-semibold text-slate-700 dark:text-slate-300">{invoice.customer.name}</p>
+                <p className="font-semibold text-slate-800 dark:text-white">AED {invoice.total}</p>
+              </div>
+            ))
+            }
           </div>
         </div>
       </section>
@@ -89,69 +126,77 @@ export default function DashboardHome() {
         <h2 className="text-xl font-bold text-slate-800 dark:text-white">
           Outstanding
         </h2>
-        <div className="mt-2 flex items-center gap-4 rounded-xl bg-white p-4 border border-slate-200">
-          <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-            {/* Currency Icon SVG */}
-            <Image alt='aed-symbol' height={30} width={30} src="/aed-symbol.png" />
+        {pendingInvoices.length === 0 &&
+          <div className="mt-2 flex items-center gap-4 rounded-xl bg-white p-4 border border-slate-200">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+              {/* Currency Icon SVG */}
+              <Image alt='aed-symbol' height={30} width={30} src="/aed-symbol.png" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-800 dark:text-white">
+                No Pending invoices
+              </p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                You have no pending invoices.
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-2xl font-bold text-slate-800 dark:text-white">
-              AED 1,250
-            </p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Due in 7 days
-            </p>
+        }
+
+        {pendingInvoices.map((invoice, i) => (
+          <div key={invoice.id || i} className="mt-2 flex items-center gap-4 rounded-xl bg-white p-4 border border-slate-200">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+              {/* Currency Icon SVG */}
+              <Image alt='aed-symbol' height={30} width={30} src="/aed-symbol.png" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-800 dark:text-white">
+                AED {invoice.total}
+              </p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Due in {invoice.remaining_days_count} days
+              </p>
+            </div>
           </div>
-        </div>
+        ))}
       </section>
 
       <section className="px-4 pt-6">
         <h2 className="text-xl font-bold text-slate-800 dark:text-white">
           Recent Payments
         </h2>
-        <div className="mt-2 space-y-3">
-          {/* Payment Item 1 */}
-          <div className="flex items-center gap-4 rounded-xl bg-white p-4 border border-slate-200">
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-              {/* Currency Icon SVG (Reused) */}
-              <Image alt='aed-symbol' height={30} width={30} src="/aed-symbol.png" />
-            </div>
-            <div>
-              <p className="font-semibold text-slate-800 dark:text-white">
-                AED 500
-              </p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Received on 15th May
-              </p>
-            </div>
-          </div>
-          {/* Payment Item 2 */}
-          <div className="flex items-center gap-4 rounded-xl bg-white p-4 border border-slate-200">
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-              {/* Currency Icon SVG (Reused) */}
-              <Image alt='aed-symbol' height={30} width={30} src="/aed-symbol.png" />
-            </div>
-            <div>
-              <p className="font-semibold text-slate-800 dark:text-white">
-                AED 750
-              </p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Received on 10th May
-              </p>
+
+
+        {paidInvoices.map((invoice, i) => (
+          <div key={invoice.id || i} className="mt-2 space-y-3">
+            <div className="flex items-center gap-4 rounded-xl bg-white p-4 border border-slate-200">
+              <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                {/* Currency Icon SVG (Reused) */}
+                <Image alt="aed-symbol" height={30} width={30} src="/aed-symbol.png" />
+              </div>
+              <div>
+                <p className="font-semibold text-slate-800 dark:text-white">
+                  AED {invoice.total}
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Received on {invoice.date_only}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        ))}
+
       </section>
 
       {/* Action Buttons Section */}
-      <div className="my-6 flex gap-4 px-4">
+      < div className="my-6 flex gap-4 px-4" >
         <button className="h-12 flex-1 rounded-lg bg-primary text-sm font-bold text-white">
-         <Link href="/invoices/create">Create Invoice</Link>
+          <Link href="/invoices/create">Create Invoice</Link>
         </button>
         <button className="h-12 flex-1 rounded-lg bg-primary/20 text-sm font-bold text-primary dark:bg-primary/30">
           Send Reminder
         </button>
-      </div>
-    </main>
+      </div >
+    </main >
   );
 }
