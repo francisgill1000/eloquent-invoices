@@ -5,10 +5,8 @@ import { User, LockIcon, Mail } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import axios from 'axios';
+import axios from '@/lib/axios';
 import { useRouter } from 'next/navigation';
-// const backendBase = process.env.NEXT_PUBLIC_API_BASE || 'http://127.0.0.1:8000';
-const backendBase = 'https://eloquent.laravel.cloud';
 
 export default function SignUpPage() {
     const router = useRouter();
@@ -37,11 +35,11 @@ export default function SignUpPage() {
         setLoading(true);
 
         try {
-            await axios.post(`${backendBase}/api/register`, form, {
-                headers: { 'Content-Type': 'application/json' },
-            });
+
+            await axios.post(`/register`, form);
 
             setMessage('Account created successfully!');
+
             router.push('/login'); // redirect to login page
         } catch (error) {
             console.error(error);

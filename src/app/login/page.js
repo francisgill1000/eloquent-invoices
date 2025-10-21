@@ -6,12 +6,7 @@ import { LockIcon, Mail } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
-
-// const backendBase = process.env.NEXT_PUBLIC_API_BASE || 'http://127.0.0.1:8000';
-// const backendBase = 'https://eloquent-backend-main-8w0z6e.laravel.cloud';
-
-const backendBase = 'https://eloquent.laravel.cloud';
+import axios from '@/lib/axios';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -34,9 +29,8 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
-            const response = await axios.post(`${backendBase}/api/login`, form, {
-                headers: { 'Content-Type': 'application/json' },
-            });
+            
+            const response = await axios.post(`/login`, form);
 
             const token = response.data.token;
             const user = response.data.user;
