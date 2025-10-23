@@ -4,45 +4,28 @@ import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { useEffect, useState } from 'react';
 
-// Import all necessary icons from Lucide React
-import {
-  Search,
-  SlidersHorizontal, // Used SlidersHorizontal for the filter icon
-  Home,
-  FileText,
-  Users,
-  Settings,
-  ArrowRight,
-  Plus,
-  // Using the Dollar Sign icon (Currency icon) for better semantic clarity
-  DollarSign,
-} from 'lucide-react';
-import { API_BASE_URL } from '@/lib/axios';
+import { Search, SlidersHorizontal, Plus, ArrowRight, Banknote, DollarSign, BadgeDollarSign, BanknoteArrowDown, CreditCard, Receipt } from 'lucide-react';
 
-// Placeholder data for the invoice list
-// const invoices = [
-//   { id: 1001, client: "Innovate LLC", amount: 2500.00, status: "Overdue", date: "2024-05-01", statusClass: "text-red-500 bg-red-500/10" },
-//   { id: 1002, client: "Quantum Solutions", amount: 1500.00, status: "Overdue", date: "2024-05-05", statusClass: "text-red-500 bg-red-500/10" },
-//   { id: 1003, client: "Acme Corp", amount: 800.00, status: "Pending", date: "2024-06-01", statusClass: "text-amber-500 bg-amber-500/10" },
-//   { id: 1004, client: "Beta Systems", amount: 1250.00, status: "Pending", date: "2024-06-15", statusClass: "text-amber-500 bg-amber-500/10" },
-//   { id: 1005, client: "Apex Enterprises", amount: 920.00, status: "Paid", date: "2024-05-20", statusClass: "text-green-500 bg-green-500/10" },
-//   { id: 1006, client: "Global Tech", amount: 3100.00, status: "Paid", date: "2024-04-10", statusClass: "text-green-500 bg-green-500/10" },
-//   { id: 1007, client: "Zeta Group", amount: 110.00, status: "Draft", date: "2024-06-20", statusClass: "text-slate-500 bg-slate-500/10" },
-// ];
+import { API_BASE_URL } from '@/lib/axios';
+import { Button } from '@/components/ui/button';
+import { parseApiError } from '@/lib/utils';
 
 export default function InvoiceList() {
+
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+
 
   const [invoices, setInvoices] = useState([]);
 
+  const fetchInvoices = async () => {
+
+    let res = await axios.get("invoices");
+    setInvoices(res.data.data);
+  };
+
   useEffect(() => {
-    const fetchInvoices = async () => {
-
-      let res = await axios.get("invoices");
-
-      setInvoices(res.data.data);
-      console.log("🚀 ~ fetchInvoices ~ res.data.data:", res.data.data)
-    };
     fetchInvoices();
   }, []);
 
@@ -51,10 +34,39 @@ export default function InvoiceList() {
     console.log("Toggle filter options. Current state:", !isFilterOpen);
   };
 
-  const handleOpenInvoiceLink = (id) => {
-    const url = `${API_BASE_URL}/invoices/generate/${id}`;
-    window.open(url, '_blank');
+  const handleMarkAsPaid = async (invoice) => {
+    console.log("🚀 ~ handleMarkAsPaid ~ invoice:", invoice)
+    setSubmitting(true);
+
+    try {
+
+      let res = await axios.get(`/mark-as-paid/` + invoice.id);
+
+      console.log("🚀 ~ handleMarkAsPaid ~ res:", res.data.message)
+
+      await fetchInvoices()
+
+    } catch (error) {
+      console.log(parseApiError(error));
+    } finally {
+      setSubmitting(false);
+    }
+
   }
+
+  const getStatusBorderColor = (status) => {
+    switch (status.toLowerCase()) {
+      case 'paid':
+        return 'border-l-green-500';
+      case 'pending':
+        return 'border-l-yellow-500';
+      case 'overdue':
+        return 'border-l-red-500';
+      default:
+        return 'border-l-slate-700';
+    }
+  };
+
 
   return (
     <main className="flex-grow">
@@ -139,17 +151,21 @@ export default function InvoiceList() {
       <section className="px-4 pb-20"> {/* Added pb-20 for clearance above the sticky footer */}
         <div className="space-y-3">
           {invoices.map((invoice) => (
-            <Link href={"#"} key={invoice.id} className="block rounded-xl bg-white p-4 border border-slate-200 transition-shadow hover:shadow-md dark:bg-slate-800 dark:border-slate-700">
+            <div
+              key={invoice.id}
+              className={`block rounded-xl bg-white p-4 shadow transition-shadow hover:shadow-md dark:bg-slate-800 border-l-2 ${getStatusBorderColor(invoice.status)}`}
+            >
+              {/* Top row: make only the number/customer clickable if you want */}
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+                <Link href="#" className="text-sm font-semibold text-slate-500 dark:text-slate-400">
                   # <span className="font-bold text-slate-700 dark:text-slate-300">{invoice.invoice_number}</span>
-                </p>
+                </Link>
+
                 <div className="flex items-center gap-2">
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold ${invoice.status_front_class}`}>
                     {invoice.status}
                   </span>
-                  {/* Arrow Right Icon (Lucide) */}
-                  <ArrowRight onClick={() => handleOpenInvoiceLink(invoice.id)} className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+                  {/* Arrow icon could go here */}
                 </div>
               </div>
 
@@ -162,11 +178,32 @@ export default function InvoiceList() {
                     {invoice.customer.name}
                   </p>
                 </div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Due: {new Date(invoice.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </p>
+
+                {(invoice.status === 'Pending' || invoice.status === 'Overdue') && (
+                  <div className="text-sm text-slate-500 dark:text-slate-400">
+                    Due: {new Date(invoice.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </div>
+                )}
+
               </div>
-            </Link>
+
+              {/* {(invoice.status === 'Pending' || invoice.status === 'Overdue') && ( */}
+                <div className="mt-2 flex gap-2 text-sm text-slate-500 dark:text-slate-400">
+                  <Button
+                    onClick={() => handleMarkAsPaid(invoice)}
+                    className="bg-primary h-8 w-full"
+                  >
+                    Mark As Paid
+                  </Button>
+                  {/* <Button
+                    onClick={() => handleMarkAsPaid(invoice)}
+                    className="bg-blue-500 w-1/2 h-8"
+                  >
+                    Remind
+                  </Button> */}
+                </div>
+              {/* )} */}
+            </div>
           ))}
         </div>
       </section>

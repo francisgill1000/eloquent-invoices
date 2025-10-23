@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 // Import necessary icons from Lucide React
 import {
@@ -14,7 +14,8 @@ import {
     Settings,
     Plus,
     Mail,
-    MoreVertical, // New icon for the "More Options" menu
+    MoreVertical,
+    Phone, // New icon for the "More Options" menu
 } from 'lucide-react';
 
 // Placeholder data for the client list
@@ -28,7 +29,11 @@ const clients = [
 ];
 
 export default function ClientList() {
+
+
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+    const [records, setRecords] = useState([]);
 
     const toggleFilter = () => {
         setIsFilterOpen(!isFilterOpen);
@@ -43,6 +48,19 @@ export default function ClientList() {
         console.log(`Open options menu for client ID: ${clientId}`);
         // Implement logic to show a dropdown or modal here
     };
+
+    useEffect(() => {
+
+        const fetchRecords = async () => {
+
+            let res = await axios.get("customers");
+
+            setRecords(res.data.data);
+
+            console.log("🚀 ~ fetchRecords ~ res.data.data:", res.data.data)
+        };
+        fetchRecords();
+    }, []);
 
     return (
         <main className="flex-grow">
@@ -115,7 +133,7 @@ export default function ClientList() {
             {/* Client List Section - UPDATED CARD STRUCTURE */}
             <section className="px-4 pb-20">
                 <div className="space-y-3">
-                    {clients.map((client) => (
+                    {records.map((client) => (
                         <Link
                             href={`/clients/${client.id}`}
                             key={client.id}
@@ -139,7 +157,7 @@ export default function ClientList() {
 
                                 {/* Avatar/Initial */}
                                 <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white ${client.overdue ? 'bg-red-500' : 'bg-primary'}`}>
-                                    {client.profileInitial}
+                                    {client.name.charAt(0)}
                                 </div>
 
                                 {/* Client Details (Name & Email) */}
@@ -148,20 +166,20 @@ export default function ClientList() {
                                         {client.name}
                                     </p>
                                     <div className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
-                                        <Mail className="h-4 w-4" />
-                                        <p className="truncate">{client.email}</p>
+                                        <Phone className="h-4 w-4" />
+                                        <p className="truncate">{client.whatsapp}</p>
                                     </div>
                                 </div>
 
                                 {/* Invoice Summary (Overdue status & count) */}
-                                <div className="flex shrink-0 flex-col items-end text-right">
+                                {/* <div className="flex shrink-0 flex-col items-end text-right">
                                     <p className={`text-sm font-semibold ${client.overdue ? 'text-red-500' : 'text-slate-700 dark:text-slate-300'}`}>
-                                        {client.overdue ? 'Overdue!' : 'Current'}
+                                        {client?.overdue ? 'Overdue!' : 'Current'}
                                     </p>
                                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                                        {client.totalInvoices} Invoices
+                                        {client.invoices_count} Invoices
                                     </p>
-                                </div>
+                                </div> */}
                             </div>
                         </Link>
                     ))}

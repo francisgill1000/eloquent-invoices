@@ -93,7 +93,6 @@ export default function LoginPage() {
                                 value={form.email}
                                 onChange={handleChange}
                                 placeholder="your@example.com"
-                                type="email"
                                 required
                                 className="w-full h-12 rounded-lg bg-white py-3 pl-10 pr-4 text-sm text-slate-800 placeholder:text-slate-400 focus:border-primary focus:ring-primary dark:border-slate-700 dark:bg-card-dark dark:text-white dark:placeholder:text-slate-500"
                             />
