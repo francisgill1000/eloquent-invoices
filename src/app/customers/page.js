@@ -4,77 +4,82 @@ import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { useEffect, useState } from 'react';
 
-// Import necessary icons from Lucide React
 import {
     Search,
     SlidersHorizontal,
-    Home,
-    FileText,
-    Users,
-    Settings,
     Plus,
-    Mail,
-    MoreVertical,
     Phone,
-    ChevronDown, // New icon for the "More Options" menu
+    ChevronDown,
+    ChevronUp,
+    Mail,
+    FileText,
+    CalculatorIcon,
+    PhoneCall,
+    PhoneCallIcon,
 } from 'lucide-react';
 
-// Placeholder data for the client list
-const clients = [
-    { id: 1, name: "Innovate LLC", email: "contact@innovatellc.com", totalInvoices: 5, overdue: true, profileInitial: 'I' },
-    { id: 2, name: "Quantum Solutions", email: "info@quantumsol.net", totalInvoices: 8, overdue: true, profileInitial: 'Q' },
-    { id: 3, name: "Acme Corp", email: "support@acmecorp.co", totalInvoices: 12, overdue: false, profileInitial: 'A' },
-    { id: 4, name: "Beta Systems", email: "hello@betasys.io", totalInvoices: 3, overdue: false, profileInitial: 'B' },
-    { id: 5, name: "Apex Enterprises", email: "billing@apexent.org", totalInvoices: 6, overdue: false, profileInitial: 'A' },
-    { id: 6, name: "Global Tech", email: "help@globaltech.com", totalInvoices: 10, overdue: false, profileInitial: 'G' },
-];
-
 export default function ClientList() {
-
-
     const [isFilterOpen, setIsFilterOpen] = useState(false);
-
     const [records, setRecords] = useState([]);
+    const [expandedId, setExpandedId] = useState(null); // 🔹 Track expanded client
 
-    const toggleFilter = () => {
-        setIsFilterOpen(!isFilterOpen);
-        console.log("Toggle filter options. Current state:", !isFilterOpen);
+    const [search, setSearch] = useState(null);
+    const [debouncedSearch, setDebouncedSearch] = useState(search);
+
+
+    const toggleFilter = () => setIsFilterOpen(!isFilterOpen);
+
+    const toggleExpand = (id) => {
+        setExpandedId(expandedId === id ? null : id);
     };
 
-    // Placeholder function for the new menu action
-    const handleMoreOptions = (e, clientId) => {
-        // Prevents the Link from navigating when the button is clicked
-        e.preventDefault();
-        e.stopPropagation();
-        console.log(`Open options menu for client ID: ${clientId}`);
-        // Implement logic to show a dropdown or modal here
+    // 🕒 Debounce logic
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 500); // wait 500ms after typing stops
+
+        return () => clearTimeout(timeout);
+    }, [search]);
+
+    const handleSearch = (e) => {
+        setSearch(e.target.value);
     };
+
 
     useEffect(() => {
 
         const fetchRecords = async () => {
 
-            let res = await axios.get("customers");
+            let config = {
+                params: {
+                    status: status,
+                    search: debouncedSearch,
+                }
+            };
+
+            let res = await axios.get("customers", config);
 
             setRecords(res.data.data);
 
             console.log("🚀 ~ fetchRecords ~ res.data.data:", res.data.data)
         };
         fetchRecords();
-    }, []);
+    }, [debouncedSearch]);
 
     return (
         <main className="flex-grow">
-            {/* Header Title Section (omitted for brevity) */}
-
+            {/* Header */}
             <section className="px-4 pt-5 pb-5">
-                <div className="flex items-center justify-between"> {/* Flex container for title and button */}
+                <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Clients</h1>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1"> create and manage customers </p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                            Create and manage customers
+                        </p>
                     </div>
                     <Link
-                        href="/customers/create" // The path to your new screen
+                        href="/customers/create"
                         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-transform hover:scale-105"
                         aria-label="Create new client"
                     >
@@ -83,19 +88,22 @@ export default function ClientList() {
                 </div>
             </section>
 
-            {/* Search and Filter Section (omitted for brevity) */}
+            {/* Search + Filter */}
             <section className="px-4">
                 <div className="flex items-center gap-2">
                     <div className="relative flex-grow">
                         <Input
                             className="w-full h-12 rounded-full border-slate-200 bg-white py-3 pl-12 pr-4 text-sm text-slate-800 shadow-sm placeholder:text-slate-400 focus:border-primary focus:ring-primary dark:border-slate-700 dark:bg-card-dark dark:text-white dark:placeholder:text-slate-500"
-                            placeholder="Search by name, email..."
+                            placeholder="Search by customer..."
                             type="text"
+                            value={search || ''}
+                            onChange={handleSearch}
                         />
                         <div className="absolute inset-y-0 left-0 flex items-center pl-4">
                             <Search className="h-5 w-5 text-slate-400 dark:text-slate-500" />
                         </div>
                     </div>
+
                     <button
                         onClick={toggleFilter}
                         className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors duration-200 ${isFilterOpen
@@ -103,18 +111,13 @@ export default function ClientList() {
                             : 'bg-white text-slate-500 shadow-sm border border-slate-200 dark:bg-card-dark dark:text-slate-400 dark:border-slate-700'
                             }`}
                         aria-expanded={isFilterOpen}
-                        aria-controls="filter-options"
                     >
                         <SlidersHorizontal className="h-6 w-6" />
                     </button>
                 </div>
-                {/* Filter Options (omitted for brevity) */}
-                <div
-                    id="filter-options"
-                    className={`mt-4 overflow-hidden transition-all duration-300 ease-in-out ${isFilterOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-                        }`}
-                >
-                    <div className="space-y-3 rounded-xl bg-white p-4 shadow dark:bg-slate-800">
+
+                {isFilterOpen && (
+                    <div className="mt-4 space-y-3 rounded-xl bg-white p-4 shadow dark:bg-slate-800 transition-all duration-300">
                         <h3 className="font-semibold text-slate-800 dark:text-white">Sort & Filter</h3>
                         <div className="flex flex-wrap gap-2">
                             <button className="rounded-full bg-primary px-3 py-1 text-sm font-medium text-white shadow-sm">
@@ -128,49 +131,93 @@ export default function ClientList() {
                             </button>
                         </div>
                     </div>
-                </div>
+                )}
             </section>
 
-            {/* Client List Section - UPDATED CARD STRUCTURE */}
-            <section className="px-4 pb-20">
+            {/* Client List */}
+            <section className="px-4 pb-20 pt-5">
                 <div className="space-y-3">
                     {records.map((client) => (
-                        <Link
-                            href={`/clients/${client.id}`}
+                        <div
                             key={client.id}
-                            className="block rounded-xl bg-white p-4 border border-slate-200 transition-shadow hover:shadow-md dark:bg-slate-800 dark:border-slate-700 relative" // Added 'relative'
+                            className="block rounded-xl bg-white p-4 border border-slate-200 transition-shadow hover:shadow-md dark:bg-slate-800 dark:border-slate-700 relative"
                         >
                             <button
-                                onClick={(e) => handleMoreOptions(e, client.id)}
+                                onClick={() => toggleExpand(client.id)}
                                 className="absolute top-5 right-5 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 z-10 text-slate-500 dark:text-slate-400"
-                                aria-label={`More options for ${client.name}`}
+                                aria-label={`Toggle details for ${client.name}`}
                             >
-                                <ChevronDown className="h-5 w-5" />
+                                {expandedId === client.id ? (
+                                    <ChevronUp className="h-5 w-5" />
+                                ) : (
+                                    <ChevronDown className="h-5 w-5" />
+                                )}
                             </button>
 
-
-                            {/* Main Content Row */}
-                            <div className="flex items-center gap-4 pt-2 pb-1 pr-10"> {/* Added pr-10 to make room for the absolute button */}
-
-                                {/* Avatar/Initial */}
-                                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white ${client.overdue ? 'bg-red-500' : 'bg-primary'}`}>
+                            {/* Main Info */}
+                            <div
+                                className="flex items-center gap-4 pt-2 pb-1 pr-10 cursor-pointer"
+                                onClick={() => toggleExpand(client.id)}
+                            >
+                                <div
+                                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white ${client.overdue ? 'bg-red-500' : 'bg-primary'
+                                        }`}
+                                >
                                     {client.name.charAt(0)}
                                 </div>
 
-                                {/* Client Details (Name & Email) */}
                                 <div className="flex-grow">
                                     <p className="text-lg font-bold text-slate-800 dark:text-white">
                                         {client.name}
                                     </p>
                                     <div className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
-                                        <Phone className="h-4 w-4" />
-                                        <p className="truncate">{client.whatsapp}</p>
+
+                                        Total Invoices: <b>{client.invoices_count || 0}</b>
                                     </div>
                                 </div>
                             </div>
-                        </Link>
-                    ))}
 
+                            {/* Expandable Section */}
+                            <div
+                                className={`transition-all duration-300 ease-in-out overflow-hidden ${expandedId === client.id
+                                    ? 'max-h-60 opacity-100 mt-3'
+                                    : 'max-h-0 opacity-0'
+                                    }`}
+                            >
+                                <div className="border-t border-slate-200 dark:border-slate-700 pt-4 space-y-3 text-sm">
+                                    {/* Email */}
+                                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                                        <Mail className="h-4 w-4 text-primary/70" />
+                                        <span>{client.email || <span className="italic text-slate-400">No email provided</span>}</span>
+                                    </div>
+
+                                    {/* Phone */}
+                                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                                        <PhoneCallIcon className="h-4 w-4 text-primary/70" />
+                                        <span>{client.phone || <span className="italic text-slate-400">No phone provided</span>}</span>
+                                    </div>
+
+                                    {/* WhatsApp */}
+                                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                                        <Phone className="h-4 w-4 text-primary/70" />
+                                        <span>{client.whatsapp || <span className="italic text-slate-400">No WhatsApp provided</span>}</span>
+                                    </div>
+
+                                    {/* Total Invoices */}
+                                    <div className="flex border-t border-slate-200 items-center justify-between text-slate-700 dark:text-slate-300  dark:bg-slate-700/40 p-2">
+                                        <div className="flex items-center gap-2">
+                                            <FileText className="h-4 w-4 text-primary/70" />
+                                            <span>Total Invoices Amount</span>
+                                        </div>
+                                        <span className="font-semibold text-primary">
+                                            {new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(client.invoices_sum_total || 0)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    ))}
                 </div>
             </section>
         </main>
