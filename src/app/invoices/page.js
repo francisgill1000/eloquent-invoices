@@ -14,24 +14,52 @@ export default function InvoiceList() {
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
-
-
+  const [status, setStatus] = useState(null);
+  const [search, setSearch] = useState(null);
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [invoices, setInvoices] = useState([]);
 
   const fetchInvoices = async () => {
 
-    let res = await axios.get("invoices");
+    let config = {
+      params: {
+        status: status,
+        search: debouncedSearch,
+      }
+    };
+
+    let res = await axios.get("invoices", config);
+
     setInvoices(res.data.data);
   };
 
+  // 🕒 Debounce logic
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500); // wait 500ms after typing stops
+
+    return () => clearTimeout(timeout);
+  }, [search]);
+
+  // 🔍 Trigger API only when debouncedSearch changes
   useEffect(() => {
     fetchInvoices();
-  }, []);
+  }, [status, debouncedSearch]);
+
 
   const toggleFilter = () => {
     setIsFilterOpen(!isFilterOpen);
     console.log("Toggle filter options. Current state:", !isFilterOpen);
+  };
+
+  const handleFilters = (status) => {
+    console.log("🚀 ~ handleFilters ~ status:", status)
+    setStatus(status);
+  };
+
+  const handleSearch = (e) => {
+    setSearch(e.target.value);
   };
 
   const handleMarkAsPaid = async (invoice) => {
@@ -94,8 +122,10 @@ export default function InvoiceList() {
           <div className="relative flex-grow">
             <Input
               className="w-full h-12 rounded-full border-slate-200 bg-white py-3 pl-12 pr-4 text-sm text-slate-800 shadow-sm placeholder:text-slate-400 focus:border-primary focus:ring-primary dark:border-slate-700 dark:bg-card-dark dark:text-white dark:placeholder:text-slate-500"
-              placeholder="Search by invoice ID, client..."
+              placeholder="Search by invoice ID"
               type="text"
+              value={search || ''}
+              onChange={handleSearch}
             />
             <div className="absolute inset-y-0 left-0 flex items-center pl-4">
               {/* Search Icon (Lucide) */}
@@ -123,23 +153,23 @@ export default function InvoiceList() {
           className={`mt-4 overflow-hidden transition-all duration-300 ease-in-out ${isFilterOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
             }`}
         >
-          <div className="space-y-3 rounded-xl bg-white p-4 shadow dark:bg-slate-800">
+          <div className="space-y-3 rounded-xl bg-white p-4 dark:bg-slate-800">
             <h3 className="font-semibold text-slate-800 dark:text-white">Filter by Status</h3>
             <div className="flex flex-wrap gap-2">
               {/* Filter Chip 1 */}
-              <button className="rounded-full bg-primary px-3 py-1 text-sm font-medium text-white shadow-sm">
+              <button onClick={() => { handleFilters(null) }} className={`${status == null ? 'bg-primary text-white' : 'bg-white text-slate-600'} rounded-full border border-slate-300 px-3 py-1 font-medium dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300`}>
                 All
               </button>
               {/* Filter Chip 2 */}
-              <button className="rounded-full border border-slate-300 bg-white px-3 py-1 text-sm font-medium text-slate-600 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300">
+              <button onClick={() => { handleFilters("Overdue") }} className={`${status == 'Overdue' ? 'bg-primary text-white' : 'bg-white text-slate-600'} rounded-full border border-slate-300 px-3 py-1 font-medium dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300`}>
                 Overdue
               </button>
               {/* Filter Chip 3 */}
-              <button className="rounded-full border border-slate-300 bg-white px-3 py-1 text-sm font-medium text-slate-600 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300">
+              <button onClick={() => { handleFilters("Pending") }} className={`${status == 'Pending' ? 'bg-primary text-white' : 'bg-white text-slate-600'} rounded-full border border-slate-300 px-3 py-1 font-medium dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300`}>
                 Pending
               </button>
               {/* Filter Chip 4 */}
-              <button className="rounded-full border border-slate-300 bg-white px-3 py-1 text-sm font-medium text-slate-600 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300">
+              <button onClick={() => { handleFilters("Paid") }} className={`${status == 'Paid' ? 'bg-primary text-white' : 'bg-white text-slate-600'} rounded-full border border-slate-300 px-3 py-1 font-medium dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300`}>
                 Paid
               </button>
             </div>
@@ -187,7 +217,7 @@ export default function InvoiceList() {
 
               </div>
 
-              {/* {(invoice.status === 'Pending' || invoice.status === 'Overdue') && ( */}
+              {(invoice.status === 'Pending' || invoice.status === 'Overdue') && (
                 <div className="mt-2 flex gap-2 text-sm text-slate-500 dark:text-slate-400">
                   <Button
                     onClick={() => handleMarkAsPaid(invoice)}
@@ -202,7 +232,7 @@ export default function InvoiceList() {
                     Remind
                   </Button> */}
                 </div>
-              {/* )} */}
+              )}
             </div>
           ))}
         </div>

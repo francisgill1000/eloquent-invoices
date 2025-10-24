@@ -15,7 +15,8 @@ import {
     Plus,
     Mail,
     MoreVertical,
-    Phone, // New icon for the "More Options" menu
+    Phone,
+    ChevronDown, // New icon for the "More Options" menu
 } from 'lucide-react';
 
 // Placeholder data for the client list
@@ -139,16 +140,12 @@ export default function ClientList() {
                             key={client.id}
                             className="block rounded-xl bg-white p-4 border border-slate-200 transition-shadow hover:shadow-md dark:bg-slate-800 dark:border-slate-700 relative" // Added 'relative'
                         >
-                            {/* New: More Options Button (Top Right)
-                  Uses absolute positioning within the 'relative' Link wrapper.
-                  The onClick handler stops propagation to prevent triggering the Link navigation.
-                */}
                             <button
                                 onClick={(e) => handleMoreOptions(e, client.id)}
-                                className="absolute top-2 right-0 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 z-10 text-slate-500 dark:text-slate-400"
+                                className="absolute top-5 right-5 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 z-10 text-slate-500 dark:text-slate-400"
                                 aria-label={`More options for ${client.name}`}
                             >
-                                <MoreVertical className="h-5 w-5" />
+                                <ChevronDown className="h-5 w-5" />
                             </button>
 
 
@@ -170,16 +167,6 @@ export default function ClientList() {
                                         <p className="truncate">{client.whatsapp}</p>
                                     </div>
                                 </div>
-
-                                {/* Invoice Summary (Overdue status & count) */}
-                                {/* <div className="flex shrink-0 flex-col items-end text-right">
-                                    <p className={`text-sm font-semibold ${client.overdue ? 'text-red-500' : 'text-slate-700 dark:text-slate-300'}`}>
-                                        {client?.overdue ? 'Overdue!' : 'Current'}
-                                    </p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                                        {client.invoices_count} Invoices
-                                    </p>
-                                </div> */}
                             </div>
                         </Link>
                     ))}
