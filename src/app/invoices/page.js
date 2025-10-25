@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { useEffect, useState } from 'react';
 
-import { Search, SlidersHorizontal, Plus, ArrowRight, Banknote, DollarSign, BadgeDollarSign, BanknoteArrowDown, CreditCard, Receipt } from 'lucide-react';
+import { Search, SlidersHorizontal, Plus } from 'lucide-react';
 
 import { API_BASE_URL } from '@/lib/axios';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ export default function InvoiceList() {
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [reminderSubmitting, setReminderSubmitting] = useState(false);
   const [status, setStatus] = useState(null);
   const [search, setSearch] = useState(null);
   const [debouncedSearch, setDebouncedSearch] = useState(search);
@@ -61,6 +62,29 @@ export default function InvoiceList() {
   const handleSearch = (e) => {
     setSearch(e.target.value);
   };
+
+  const handleReminder = async (id) => {
+    console.log("🚀 ~ handleReminder ~ id:", id)
+      ,
+      setReminderSubmitting(true);
+
+    try {
+
+      // let res = await axios.get(`/invoices/reminder/` + id);
+
+      // console.log("🚀 ~ handleReminder ~ res:", res)
+
+      // await fetchInvoices()
+
+    } catch (error) {
+      console.log(parseApiError(error));
+    } finally {
+      setTimeout(() => {
+        setReminderSubmitting(false);
+      }, 5000);
+    }
+
+  }
 
   const handleMarkAsPaid = async (invoice) => {
     console.log("🚀 ~ handleMarkAsPaid ~ invoice:", invoice)
@@ -220,17 +244,19 @@ export default function InvoiceList() {
               {(invoice.status === 'Pending' || invoice.status === 'Overdue') && (
                 <div className="mt-2 flex gap-2 text-sm text-slate-500 dark:text-slate-400">
                   <Button
+                    disabled={submitting}
                     onClick={() => handleMarkAsPaid(invoice)}
-                    className="bg-primary h-8 w-full"
+                    className="bg-primary w-1/2 h-8"
                   >
-                    Mark As Paid
+                    {submitting ? "Submitting..." : "Mark As Paid"}
                   </Button>
-                  {/* <Button
-                    onClick={() => handleMarkAsPaid(invoice)}
+                  <Button
+                    disabled={reminderSubmitting}
+                    onClick={() => handleReminder(invoice.id)}
                     className="bg-blue-500 w-1/2 h-8"
                   >
-                    Remind
-                  </Button> */}
+                    {reminderSubmitting ? "Submitting..." : "Reminder"}
+                  </Button>
                 </div>
               )}
             </div>
