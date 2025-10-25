@@ -1,8 +1,7 @@
 import axios from "axios";
 
-// const API_BASE = "http://localhost:8000/api";
-const API_BASE = 'https://eloquent.laravel.cloud/api';
-
+const API_BASE = "http://localhost:8000/api";
+// const API_BASE = 'https://eloquent.laravel.cloud/api';
 
 let api = axios.create({
   baseURL: API_BASE,
@@ -32,4 +31,5 @@ api.interceptors.request.use((config) => {
 });
 
 export const API_BASE_URL = API_BASE;
+
 export default api;

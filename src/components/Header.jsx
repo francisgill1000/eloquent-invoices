@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Home, Users, Menu, Bell, LayoutTemplate, Settings, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 import Image from "next/image";
@@ -10,8 +10,7 @@ import { useEffect, useState } from "react";
 import axiosInstance from "@/lib/axios";
 
 if (typeof window !== "undefined" && !window.axios) {
-    window.axios = axiosInstance; // ✅ make it globally accessible
-    console.log("🚀 ~ axiosInstance:", axiosInstance)
+    window.axios = axiosInstance;
 }
 
 

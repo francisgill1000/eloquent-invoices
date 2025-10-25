@@ -104,7 +104,7 @@ export default function ClientList() {
                         </div>
                     </div>
 
-                    <button
+                    {/* <button
                         onClick={toggleFilter}
                         className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors duration-200 ${isFilterOpen
                             ? 'bg-primary text-white dark:bg-primary'
@@ -113,7 +113,7 @@ export default function ClientList() {
                         aria-expanded={isFilterOpen}
                     >
                         <SlidersHorizontal className="h-6 w-6" />
-                    </button>
+                    </button> */}
                 </div>
 
                 {isFilterOpen && (
