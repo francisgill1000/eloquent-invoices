@@ -34,19 +34,17 @@ export default function Header() {
     };
 
     return (
-        <footer className="sticky bottom-0 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 z-10">
-            {/* Using a grid to manage 5 equally spaced items */}
+        <footer className="fixed bottom-0 left-0 w-full bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 z-50">
             <div className="grid grid-cols-4 px-1 pb-3 pt-2">
                 {NAV_ITEMS.map((item) => {
                     const active = isActive(item.href);
                     return (
                         <Link
                             key={item.name}
-                            className={`flex flex-col items-center justify-end gap-1 transition-colors ${
-                                active
+                            className={`flex flex-col items-center justify-end gap-1 transition-colors ${active
                                     ? "text-primary font-bold"
                                     : "text-slate-500 dark:text-slate-400 font-medium"
-                            }`}
+                                }`}
                             href={item.href}
                         >
                             <div className="flex h-8 items-center justify-center">
