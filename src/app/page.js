@@ -18,19 +18,22 @@ export default function DashboardHome() {
   useEffect(() => {
     const fetchInvoices = async () => {
 
-      let res = await axios.get("invoices");
+      let config = {
+        parmas: {
+          order_by: "updated_at",
+          order: "desc",
+        }
+      };
+
+      let res = await axios.get("invoices", config);
 
       let invoices = res.data.data;
-
 
       let paidInvoices = invoices.filter(inv => inv.status === 'Paid');
 
       let pendingInvoices = invoices.filter(inv => inv.status === 'Pending' && inv.remaining_days_count > 0);
 
       let dueInvoices = invoices.filter(inv => inv.status === 'Overdue');
-
-      console.log(dueInvoices.map(e => e.total));
-
 
       const dueInvoicesSum = dueInvoices.reduce((acc, cur) => acc + parseFloat(cur.total.replace(/,/g, '')), 0);
 
@@ -134,7 +137,6 @@ export default function DashboardHome() {
         <h2 className="text-xl font-bold text-slate-800 dark:text-white">
           Recent Payments
         </h2>
-
 
         {paidInvoices.map((invoice, i) => (
           <div key={invoice.id || i} className="mt-2 space-y-3">

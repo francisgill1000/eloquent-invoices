@@ -126,16 +126,6 @@ export default function LoginPage() {
                         </div>
                     </div>
 
-                    {message && (
-                        <p
-                            className={`text-center text-sm ${
-                                message.includes('success') ? 'text-green-500' : 'text-red-500'
-                            }`}
-                        >
-                            {message}
-                        </p>
-                    )}
-
                     <button
                         type="submit"
                         disabled={loading}

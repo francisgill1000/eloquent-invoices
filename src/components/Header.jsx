@@ -24,6 +24,12 @@ export default function Header() {
 
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
+        const token = localStorage.getItem("token");
+
+        if (!storedUser || ! token) {
+            return router.push("/login");
+        }
+
         if (storedUser) {
             setUser(JSON.parse(storedUser));
         }
@@ -43,7 +49,7 @@ export default function Header() {
             const token = localStorage.getItem("token");
             if (!token) return router.push("/login");
 
-            await axiosInstance.post(`logout` );
+            await axiosInstance.post(`logout`);
 
             localStorage.removeItem("token");
             localStorage.removeItem("user");

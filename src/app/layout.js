@@ -37,7 +37,7 @@ export default function RootLayout({ children }) {
           {/* Main Content */}
           <div className="flex flex-col flex-1 justify-between">
             <Header />
-            <main className="flex-1 px-4 md:px-6 lg:px-8">{children}</main>
+            <main className="flex-1 pb-20">{children}</main>
 
             {/* Footer only on mobile */}
             <div className="block md:hidden">
