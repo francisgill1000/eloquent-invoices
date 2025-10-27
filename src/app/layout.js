@@ -28,22 +28,29 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-status-bar-style" content="#37053e" />
       </head>
       <body>
-        <div className="relative flex min-h-screen overflow-x-hidden bg-gray-50 dark:bg-slate-900">
-          {/* Sidebar (visible on md and above) */}
-          <div className="hidden md:flex">
-            <Sidebar />
-          </div>
+        <div className="bg-primary text-white font-sans min-h-screen flex flex-col">
 
-          {/* Main Content */}
-          <div className="flex flex-col flex-1 justify-between">
-            <Header />
-            <main className="flex-1 pb-20">{children}</main>
+          {/* 1. Header / Top Bar */}
+          <Header />
 
-            {/* Footer only on mobile */}
-            <div className="block md:hidden">
-              <Footer />
+          {/* 2. Main Content Wrapper */}
+          <div className="flex flex-1 min-h-[calc(100vh-50px)]">
+
+            {/* 2a. Sidebar Navigation */}
+            <div className="hidden md:block">
+              <Sidebar />
             </div>
+
+            {/* 2b. Dashboard Content (Main Area) */}
+            <main className="flex-1 lg:p-8">
+              {children}
+            </main>
           </div>
+
+          <div className="block md:hidden">
+            <Footer />
+          </div>
+
         </div>
       </body>
     </html>
