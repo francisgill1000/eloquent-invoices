@@ -14,8 +14,11 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { useRouter } from 'next/navigation';
 
 export default function InvoiceList() {
+
+  const router = useRouter();
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -56,17 +59,30 @@ export default function InvoiceList() {
   const handleFilters = (status) => setStatus(status);
   const handleSearch = (e) => setSearch(e.target.value);
 
-  const handleMarkAsPaid = async (invoice) => {
-    setSubmitting(true);
+  const handlPayment = async (invoice) => {
     try {
-      let res = await axios.get(`/mark-as-paid/${invoice.id}`);
-      console.log(res.data.message);
-      await fetchInvoices();
+      // Store the invoice for the payment page
+      sessionStorage.setItem('invoiceToPay', JSON.stringify(invoice));
+      router.push('/invoices/pay');
     } catch (error) {
-      console.log(parseApiError(error));
-    } finally {
-      setSubmitting(false);
+      console.log(error);
     }
+  };
+
+
+  const handlPaymentOLD = async (invoice) => {
+    const router = useRouter();
+
+    // setSubmitting(true);
+    // try {
+    //   let res = await axios.get(`/mark-as-paid/${invoice.id}`);
+    //   console.log(res.data.message);
+    //   await fetchInvoices();
+    // } catch (error) {
+    //   console.log(parseApiError(error));
+    // } finally {
+    //   setSubmitting(false);
+    // }
   };
 
   const handleReminderClick = (invoice) => {
@@ -201,10 +217,10 @@ export default function InvoiceList() {
                 <div className="mt-2 flex gap-2">
                   <Button
                     disabled={submitting}
-                    onClick={() => handleMarkAsPaid(invoice)}
+                    onClick={() => handlPayment(invoice)}
                     className="bg-primary w-1/2 h-8"
                   >
-                    {submitting ? "Submitting..." : "Mark As Paid"}
+                    {submitting ? "Submitting..." : "Pay"}
                   </Button>
                   <Button
                     disabled={reminderSubmitting}

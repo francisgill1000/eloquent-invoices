@@ -30,9 +30,9 @@ export default function RootLayout({ children }) {
       <body>
         <div className="relative flex min-h-screen overflow-x-hidden bg-gray-50 dark:bg-slate-900">
           {/* Sidebar (visible on md and above) */}
-          <div className="hidden md:flex">
+          {/* <div className="hidden md:flex">
             <Sidebar />
-          </div>
+          </div> */}
 
           {/* Main Content */}
           <div className="flex flex-col flex-1 justify-between">

@@ -26,7 +26,7 @@ export default function Header() {
         const storedUser = localStorage.getItem("user");
         const token = localStorage.getItem("token");
 
-        if (!storedUser || ! token) {
+        if (!storedUser || !token) {
             return router.push("/login");
         }
 
@@ -73,7 +73,7 @@ export default function Header() {
                     />
                     <div>
                         <p className="text-sm font-medium text-slate-500">Welcome back,</p>
-                        <p className="text-xl font-bold text-slate-800">{user?.name}</p>
+                        <p className="text-xl font-bold text-slate-800">{user && user?.name}</p>
                     </div>
                 </div>
 
