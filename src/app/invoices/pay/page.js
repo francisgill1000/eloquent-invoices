@@ -197,7 +197,7 @@ export default function NewInvoiceScreen() {
                                         Subtotal
                                     </span>
                                     <span className="text-slate-800 dark:text-white font-semibold">
-                                        AED {invoice?.subtotal.toFixed(2)}
+                                        AED {invoice?.subtotal}
                                     </span>
                                 </div>
 
