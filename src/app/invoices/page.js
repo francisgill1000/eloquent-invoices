@@ -15,6 +15,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useRouter } from 'next/navigation';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function InvoiceList() {
 
@@ -33,7 +34,36 @@ export default function InvoiceList() {
   const [reminderModalOpen, setReminderModalOpen] = useState(false);
   const [paymentsModalOpen, setPaymentsModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [selectedMethod, setSelectedMethod] = useState(null);
+  const [selectedMethod, setSelectedMethod] = useState("Whatsapp");
+
+  const [template, setTemplate] = useState(null);
+  const [staticTemplate, setStaticTemplate] = useState("");
+
+
+  const prepareTemplate = (template, data) => {
+    let result = template;
+    for (const key in data) {
+      const regex = new RegExp(`{{${key}}}`, "g"); // global replace
+      result = result.replace(regex, data[key]);
+    }
+    return result;
+  };
+
+
+  useEffect(() => {
+    const fetchTemplate = async () => {
+      try {
+        const res = await axios.get("/template?id=1&method=Whatsapp");
+
+        setStaticTemplate(res.data);
+
+      } catch (err) {
+        console.error("Failed to fetch template:", err);
+      }
+    };
+
+    fetchTemplate();
+  }, []);
 
   const fetchInvoices = async () => {
     try {
@@ -70,52 +100,85 @@ export default function InvoiceList() {
       console.log(error);
     }
   };
-
-
-  const handlPaymentOLD = async (invoice) => {
-    const router = useRouter();
-
-    // setSubmitting(true);
-    // try {
-    //   let res = await axios.get(`/mark-as-paid/${invoice.id}`);
-    //   console.log(res.data.message);
-    //   await fetchInvoices();
-    // } catch (error) {
-    //   console.log(parseApiError(error));
-    // } finally {
-    //   setSubmitting(false);
-    // }
-  };
-
   const handleReminderClick = (invoice) => {
+    if (!invoice) return;
+
     setSelectedInvoice(invoice);
     setReminderModalOpen(true);
+
+    const data = {
+      name: invoice.customer.name,
+      invoice_number: invoice.invoice_number,
+      balance: invoice.balance,
+      company_name: "Eloquent Invoices",
+    };
+
+    setTemplate(prepareTemplate(staticTemplate, data));
   };
+
+
 
   const handlePaymentHistory = (invoice) => {
     console.log("🚀 ~ handlePaymentHistory ~ invoice:", invoice)
     setSelectedInvoice(invoice)
     setPayments(invoice.payments);
     setPaymentsModalOpen(true);
-
   };
 
   const sendReminder = async () => {
     if (!selectedInvoice || !selectedMethod) return;
-    setReminderSubmitting(true);
-    try {
 
-      let config = { params: { method: selectedMethod } };
-      const res = await axios.get(`/invoices/reminder/${selectedInvoice.id}`, config);
-      console.log("Reminder sent:", res.data.message);
-      setReminderModalOpen(false);
-      setSelectedInvoice(null);
-      setSelectedMethod(null);
-    } catch (error) {
-      console.log(parseApiError(error));
-    } finally {
-      setReminderSubmitting(false);
+    let whatsapp = selectedInvoice?.customer?.whatsapp;
+
+    if (!whatsapp) {
+      alert("Customer WhatsApp number not found!");
+      return;
     }
+
+    // ✅ Clean up the number
+    const phone = whatsapp
+      .replace(/\s+/g, '')    // remove spaces
+      .replace(/\+/g, '')     // remove +
+      .replace(/^0+/, '');    // remove leading zeros
+
+    // ✅ Make sure it starts with the country code
+    // Example: if number is 0554501483 and your country is UAE (+971)
+    let fullNumber = phone.startsWith('971') ? phone : `971${phone}`;
+    console.log("🚀 ~ sendReminder ~ fullNumber:", fullNumber)
+
+    fullNumber = "971554501483";
+
+    const encodedMessage = encodeURIComponent(template);
+
+    const url = `https://wa.me/${fullNumber}?text=${encodedMessage}`;
+
+    console.log("✅ WhatsApp URL:", url);
+    window.open(url, "_blank");
+  };
+
+
+  const sendReminder_old = async () => {
+
+    if (!selectedInvoice || !selectedMethod) return;
+
+    let whatsapp = selectedInvoice?.customer?.whatsapp;
+
+    console.log("🚀 ~ sendReminder ~ whatsapp:", whatsapp)
+
+    // setReminderSubmitting(true);
+    // try {
+
+    //   let config = { params: { method: selectedMethod } };
+    //   const res = await axios.get(`/invoices/reminder/${selectedInvoice.id}`, config);
+    //   console.log("Reminder sent:", res.data.message);
+    //   setReminderModalOpen(false);
+    //   setSelectedInvoice(null);
+    //   setSelectedMethod(null);
+    // } catch (error) {
+    //   console.log(parseApiError(error));
+    // } finally {
+    //   setReminderSubmitting(false);
+    // }
   };
 
   const getStatusBorderColor = (status) => {
@@ -247,20 +310,13 @@ export default function InvoiceList() {
           <DialogHeader>
             <DialogTitle>Send Reminder</DialogTitle>
             <DialogDescription>
-              Choose how you want to send the reminder for invoice <strong>#{selectedInvoice?.invoice_number}</strong>.
+              Send gentle reminder for invoice <strong>#{selectedInvoice?.invoice_number}</strong>.
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col gap-3 mt-4">
-            {['Whatsapp', 'Email', 'SMS'].map((method) => (
-              <Button
-                key={method}
-                variant={selectedMethod === method ? "default" : "outline"}
-                onClick={() => setSelectedMethod(method)}
-              >
-                {method}
-              </Button>
-            ))}
+            <Textarea value={template} onChange={e => setTemplate(e.target.value)} />
+            {/* <pre>{preview}</pre> */}
           </div>
 
           <DialogFooter className="mt-6">
