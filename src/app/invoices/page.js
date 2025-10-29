@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { useEffect, useState } from 'react';
-import { Search, SlidersHorizontal, Plus } from 'lucide-react';
+import { Search, SlidersHorizontal, Plus, AlertCircle, Wallet, Clock, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { parseApiError } from '@/lib/utils';
 import {
@@ -27,9 +27,11 @@ export default function InvoiceList() {
   const [search, setSearch] = useState(null);
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [invoices, setInvoices] = useState([]);
+  const [payments, setPayments] = useState([]);
 
   // 👉 New states for reminder modal
   const [reminderModalOpen, setReminderModalOpen] = useState(false);
+  const [paymentsModalOpen, setPaymentsModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [selectedMethod, setSelectedMethod] = useState(null);
 
@@ -88,6 +90,14 @@ export default function InvoiceList() {
   const handleReminderClick = (invoice) => {
     setSelectedInvoice(invoice);
     setReminderModalOpen(true);
+  };
+
+  const handlePaymentHistory = (invoice) => {
+    console.log("🚀 ~ handlePaymentHistory ~ invoice:", invoice)
+    setSelectedInvoice(invoice)
+    setPayments(invoice.payments);
+    setPaymentsModalOpen(true);
+
   };
 
   const sendReminder = async () => {
@@ -214,21 +224,17 @@ export default function InvoiceList() {
               </div>
 
               {(invoice.status === 'Pending' || invoice.status === 'Overdue') && (
-                <div className="mt-2 flex gap-2">
-                  <Button
-                    disabled={submitting}
-                    onClick={() => handlPayment(invoice)}
-                    className="bg-primary w-1/2 h-8"
-                  >
-                    {submitting ? "Submitting..." : "Pay"}
-                  </Button>
-                  <Button
-                    disabled={reminderSubmitting}
-                    onClick={() => handleReminderClick(invoice)}
-                    className="bg-blue-500 w-1/2 h-8"
-                  >
-                    {reminderSubmitting ? "Submitting..." : "Reminder"}
-                  </Button>
+                <div className="mt-2 flex justify-between gap-2">
+                  <div>
+                    <Clock className="text-primary-500 h-8" onClick={() => handlePaymentHistory(invoice)} />
+                  </div>
+                  <div>
+                    <div className='flex'>
+                      <Bell className="text-primary h-8" onClick={() => handleReminderClick(invoice)} />
+                      &nbsp;
+                      <Wallet className="text-primary h-8" onClick={() => handlPayment(invoice)} />
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -236,7 +242,6 @@ export default function InvoiceList() {
         </div>
       </section>
 
-      {/* Reminder Method Modal */}
       <Dialog open={reminderModalOpen} onOpenChange={setReminderModalOpen}>
         <DialogContent>
           <DialogHeader>
@@ -269,6 +274,74 @@ export default function InvoiceList() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={paymentsModalOpen} onOpenChange={setPaymentsModalOpen}>
+        <DialogContent className="max-w-md w-[90vw] rounded-2xl p-6 sm:p-8">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl font-semibold">
+              Payment History
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Your payment history for{" "}
+              <strong className="text-foreground">
+                #{selectedInvoice?.invoice_number}
+              </strong>.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-6 relative border-border px-1">
+            {payments.length === 0 ? (
+              <div className="text-center text-sm text-muted-foreground py-6 border rounded-lg bg-muted/30">
+                No payments found.
+              </div>
+            ) : (
+              payments.map((payment, index) => (
+                <div
+                  key={payment.id}
+                  className="relative pb-6 pl-2"
+                >
+                  {/* Timeline dot */}
+                  <span className="absolute -left-[7px] top-3 w-3 h-3 bg-primary rounded-full ring-4 ring-background" />
+
+                  {/* Payment info */}
+                  <div className="rounded-lg bg-muted/40 hover:bg-muted/60 transition p-3 sm:p-4 flex flex-col gap-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-green-600 text-base">
+                        AED {parseFloat(payment.amount).toFixed(2)}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(payment.created_at).toLocaleDateString(undefined, {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mt-1">
+                      <div>
+                        <span className="font-medium text-foreground">Mode:</span>{" "}
+                        {payment.mode}
+                      </div>
+                      <div>
+                        <span className="font-medium text-foreground">Ref #:</span>{" "}
+                        {String(payment.id).padStart(6, "0")}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Connector line (hidden for last item) */}
+                  {index !== payments.length - 1 && (
+                    <span className="absolute left-[-1px] top-5 h-[calc(100%-0.75rem)] w-px bg-border" />
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+
+        </DialogContent>
+      </Dialog>
+
     </main>
   );
 }

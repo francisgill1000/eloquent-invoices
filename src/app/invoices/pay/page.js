@@ -268,7 +268,7 @@ export default function NewInvoiceScreen() {
                                         Balance
                                     </span>
                                     <span className="text-lg font-bold text-primary">
-                                        AED {balance.toFixed(2)}
+                                        AED {balance}
                                     </span>
                                 </div>
 
