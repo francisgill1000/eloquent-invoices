@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { useEffect, useState } from 'react';
-import { Search, SlidersHorizontal, Plus, AlertCircle, Wallet, Clock, Bell } from 'lucide-react';
+import { Search, SlidersHorizontal, Plus, AlertCircle, Wallet, Clock, Bell, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { parseApiError } from '@/lib/utils';
 import {
@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/dialog";
 import { useRouter } from 'next/navigation';
 import { Textarea } from '@/components/ui/textarea';
+import { API_BASE_URL } from '@/lib/axios';
+
 
 export default function InvoiceList() {
 
@@ -156,6 +158,11 @@ export default function InvoiceList() {
     window.open(url, "_blank");
   };
 
+  const handleOpenInvoiceLink = (id) => {
+    const url = `${API_BASE_URL}/invoices/generate/${id}`;
+    window.open(url, '_blank');
+  }
+
 
   const sendReminder_old = async () => {
 
@@ -295,11 +302,19 @@ export default function InvoiceList() {
                     <div className='flex'>
                       <Bell className="text-primary h-8" onClick={() => handleReminderClick(invoice)} />
                       &nbsp;
+                      &nbsp;
                       <Wallet className="text-primary h-8" onClick={() => handlPayment(invoice)} />
                     </div>
                   </div>
                 </div>
               )}
+
+              <Button className="mt-5 h-8 w-full bg-blue-500" onClick={() => handleOpenInvoiceLink(invoice.id)}>
+                <p style={{ paddingTop: '1px' }}>View Invoice</p>
+                <ExternalLink />
+              </Button>
+
+              {/* {invoice.invoice_number} */}
             </div>
           ))}
         </div>
@@ -398,6 +413,6 @@ export default function InvoiceList() {
         </DialogContent>
       </Dialog>
 
-    </main>
+    </main >
   );
 }
